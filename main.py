@@ -23,37 +23,56 @@ class HopfieldNetwork:
 
     # Método para recordar patrones a partir de una entrada dada
     def recall(self, pattern, steps=10):
+        pattern = pattern.copy()
         for _ in range(steps):
             for i in range(self.n_neurons):
-                activation = np.dot(self.weights[i], pattern)  # Calcular la activación de la neurona i
-                pattern[i] = 1 if activation >= 0 else -1  # Actualizar el estado de la neurona i
+                activation = np.dot(self.weights[i], pattern)
+                pattern[i] = 1 if activation >= 0 else -1
         return pattern
 
 
 # Función para preprocesar la imagen
 def preprocess_image(image):
-    image_uint8 = (image * 255).astype(np.uint8)  # Convertir la imagen a tipo uint8
-    _, binary_image = cv2.threshold(image_uint8, 127, 255, cv2.THRESH_BINARY)  # Convertir la imagen a binaria
+    image_uint8 = (image * 255).astype(np.uint8)
+    _, binary_image = cv2.threshold(image_uint8, 127, 255, cv2.THRESH_BINARY)
     binary_image = binary_image / 255  # Escalar los valores de vuelta a 0 y 1
-    return binary_image.flatten()  # Aplanar la imagen en un vector
+    binary_image[binary_image == 0] = -1  # Convertir los ceros a -1
+    return binary_image.flatten()
 
 
 # Función para visualizar la imagen
 def display_image(image, title="Image"):
-    plt.imshow(image.reshape((10, 10)), cmap='gray', vmin=0, vmax=1)  # Mostrar la imagen en una cuadrícula 10x10
-    plt.title(title)  # Título de la imagen
-    plt.axis('off')  # Ocultar los ejes de coordenadas
-    plt.show()  # Mostrar la imagen
+    plt.imshow(image.reshape((10, 10)), cmap='gray', vmin=-1, vmax=1)
+    plt.title(title)
+    plt.axis('off')
+    plt.show()
 
 
 # Función para encontrar la posición del centro del aro
 def find_ring_center(image):
-    coordinates = np.argwhere(image == 1)  # Encontrar las coordenadas de los píxeles con valor 1
+    coordinates = np.argwhere(image == 1)
     if len(coordinates) == 0:
-        return None  # No se encontró el aro
-    x_center = np.mean(coordinates[:, 0])  # Calcular el promedio de las coordenadas x
-    y_center = np.mean(coordinates[:, 1])  # Calcular el promedio de las coordenadas y
-    return (x_center, y_center)  # Devolver las coordenadas del centro del aro
+        return None
+    x_center = np.mean(coordinates[:, 0])
+    y_center = np.mean(coordinates[:, 1])
+    return (x_center, y_center)
+
+
+def test_dummy_plot():
+    # Crear una matriz binaria simple para prueba
+    dummy_image = np.array([
+        [0, 0, 0, 1, 1, 0, 0, 0, 0, 0],
+        [0, 0, 1, 1, 1, 1, 0, 0, 0, 0],
+        [0, 1, 1, 0, 0, 1, 1, 0, 0, 0],
+        [1, 1, 0, 0, 0, 0, 1, 1, 0, 0],
+        [1, 0, 0, 0, 0, 0, 0, 1, 1, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+        [0, 0, 0, 0, 0, 0, 0, 1, 1, 0],
+        [0, 0, 0, 0, 0, 1, 1, 0, 0, 0],
+        [0, 0, 0, 1, 1, 1, 0, 0, 0, 0],
+        [0, 0, 0, 0, 1, 1, 0, 0, 0, 0]
+    ])
+    display_image(dummy_image, title="Dummy Image")
 
 
 def test_hopfield():
@@ -118,6 +137,11 @@ def test_hopfield():
     display_image(recalled_image_correct, title=f"Imagen Recuperada Correcta (Centro: {center_correct})")
     display_image(recalled_image_incorrect, title=f"Imagen Recuperada Incorrecta (Centro: {center_incorrect})")
 
+    # Verificar que los centros son diferentes
+    print(f"Centro correcto: {center_correct}")
+    print(f"Centro incorrecto: {center_incorrect}")
+
 
 if __name__ == '__main__':
+    test_dummy_plot()
     test_hopfield()

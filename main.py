@@ -58,25 +58,30 @@ def find_ring_center(image):
     return (x_center, y_center)
 
 
-def test_dummy_plot():
-    # Crear una matriz binaria simple para prueba
-    dummy_image = np.array([
-        [0, 0, 0, 1, 1, 0, 0, 0, 0, 0],
-        [0, 0, 1, 1, 1, 1, 0, 0, 0, 0],
-        [0, 1, 1, 0, 0, 1, 1, 0, 0, 0],
-        [1, 1, 0, 0, 0, 0, 1, 1, 0, 0],
-        [1, 0, 0, 0, 0, 0, 0, 1, 1, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
-        [0, 0, 0, 0, 0, 0, 0, 1, 1, 0],
-        [0, 0, 0, 0, 0, 1, 1, 0, 0, 0],
-        [0, 0, 0, 1, 1, 1, 0, 0, 0, 0],
-        [0, 0, 0, 0, 1, 1, 0, 0, 0, 0]
-    ])
-    display_image(dummy_image, title="Dummy Image")
+# Función para desplazar el aro en la imagen
+def shift_ring(image, shift_x, shift_y):
+    shifted_image = np.roll(image, shift_x, axis=0)
+    shifted_image = np.roll(shifted_image, shift_y, axis=1)
+    return shifted_image
+
+
+# Función para calcular la distancia euclidiana entre dos centros
+def euclidean_distance(center1, center2):
+    return np.sqrt((center1[0] - center2[0]) ** 2 + (center1[1] - center2[1]) ** 2)
+
+
+# Función para calcular la distancia en X y en Y entre dos centros
+def xy_distance(center1, center2):
+    return (center1[0] - center2[0], center1[1] - center2[1])
+
+
+# Función para calcular la distancia entre dos patrones
+def pattern_distance(pattern1, pattern2):
+    return np.sum(np.abs(pattern1 - pattern2))
 
 
 def test_hopfield():
-    # Crear imágenes de referencia y de prueba
+    # Crear la imagen de referencia
     reference_image = np.array([
         [0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
         [0, 0, 0, 1, 1, 1, 1, 0, 0, 0],
@@ -90,58 +95,41 @@ def test_hopfield():
         [0, 0, 0, 0, 1, 1, 0, 0, 0, 0]
     ])
 
-    test_image_correct = np.array([
-        [0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
-        [0, 0, 0, 1, 1, 1, 1, 0, 0, 0],
-        [0, 0, 1, 1, 0, 0, 1, 1, 0, 0],
-        [0, 1, 1, 0, 0, 0, 0, 1, 1, 0],
-        [1, 1, 0, 0, 0, 0, 0, 0, 1, 1],
-        [1, 1, 0, 0, 0, 0, 0, 0, 1, 1],
-        [0, 1, 1, 0, 0, 0, 0, 1, 1, 0],
-        [0, 0, 1, 1, 0, 0, 1, 1, 0, 0],
-        [0, 0, 0, 1, 1, 1, 1, 0, 0, 0],
-        [0, 0, 0, 0, 1, 1, 0, 0, 0, 0]
-    ])
+    # Generar imágenes desplazadas para entrenamiento
+    training_images = [reference_image]
+    shifts = [(-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (-1, 1), (1, -1), (1, 1)]
+    for shift in shifts:
+        training_images.append(shift_ring(reference_image, shift[0], shift[1]))
 
-    test_image_incorrect = np.array([
-        [0, 0, 0, 1, 1, 0, 0, 0, 0, 0],
-        [0, 0, 1, 1, 1, 1, 0, 0, 0, 0],
-        [0, 1, 1, 0, 0, 1, 1, 0, 0, 0],
-        [1, 1, 0, 0, 0, 0, 1, 1, 0, 0],
-        [1, 0, 0, 0, 0, 0, 0, 1, 1, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
-        [0, 0, 0, 0, 0, 0, 0, 1, 1, 0],
-        [0, 0, 0, 0, 0, 1, 1, 0, 0, 0],
-        [0, 0, 0, 1, 1, 1, 0, 0, 0, 0],
-        [0, 0, 0, 0, 1, 1, 0, 0, 0, 0]
-    ])
+    # Preprocesar imágenes de entrenamiento
+    preprocessed_training_images = [preprocess_image(img) for img in training_images]
 
-    # Preprocesar imágenes (convertir a binario y aplanar)
-    preprocessed_reference = preprocess_image(reference_image)
-    preprocessed_test_correct = preprocess_image(test_image_correct)
-    preprocessed_test_incorrect = preprocess_image(test_image_incorrect)
-
-    # Crear y entrenar la red de Hopfield usando Hebbian Learning con la imagen de referencia
+    # Crear la red de Hopfield y entrenarla con las imágenes desplazadas
     hopfield_net = HopfieldNetwork(n_neurons=100)
-    hopfield_net.train([preprocessed_reference])
+    hopfield_net.train(preprocessed_training_images)
 
-    # Recuperar el patrón para la imagen correcta
-    recalled_image_correct = hopfield_net.recall(preprocessed_test_correct).reshape(10, 10)
-    center_correct = find_ring_center(recalled_image_correct)
+    # Imágenes de prueba
+    test_images = [
+        reference_image,
+        shift_ring(reference_image, 1, 1),
+        shift_ring(reference_image, -1, -1),
+        shift_ring(reference_image, 2, 0),
+        shift_ring(reference_image, 0, -2),
+    ]
 
-    # Recuperar el patrón para la imagen incorrecta
-    recalled_image_incorrect = hopfield_net.recall(preprocessed_test_incorrect).reshape(10, 10)
-    center_incorrect = find_ring_center(recalled_image_incorrect)
+    for i, test_image in enumerate(test_images):
+        preprocessed_test = preprocess_image(test_image)
+        recalled_image = hopfield_net.recall(preprocessed_test).reshape(10, 10)
+        center_recalled = find_ring_center(recalled_image)
+        center_reference = find_ring_center(reference_image)
+        distance = euclidean_distance(center_recalled, center_reference)
+        x_distance, y_distance = xy_distance(center_recalled, center_reference)
 
-    # Visualizar las imágenes recuperadas y mostrar las coordenadas del centro del aro
-    display_image(recalled_image_correct, title=f"Imagen Recuperada Correcta (Centro: {center_correct})")
-    display_image(recalled_image_incorrect, title=f"Imagen Recuperada Incorrecta (Centro: {center_incorrect})")
-
-    # Verificar que los centros son diferentes
-    print(f"Centro correcto: {center_correct}")
-    print(f"Centro incorrecto: {center_incorrect}")
+        # Visualizar la imagen recuperada y mostrar las coordenadas del centro del aro
+        display_image(recalled_image, title=f"Imagen Recuperada {i} (Centro: {center_recalled})")
+        print(
+            f"Test {i}: Centro recuperado: {center_recalled}, Centro de referencia: {center_reference}, Distancia euclidiana: {distance}, Desplazamiento en X: {x_distance}, Desplazamiento en Y: {y_distance}")
 
 
 if __name__ == '__main__':
-    test_dummy_plot()
     test_hopfield()

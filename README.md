@@ -34,14 +34,14 @@ El algoritmo de identificación de imágenes utilizando el modelo de Hopfield in
 
 1. **Distancia Euclidiana**:
     - Calcula la distancia directa entre dos puntos en un espacio bidimensional, que representan los centros de los patrones en las imágenes.
-    - Fórmula: $`\( \text{Distancia Euclidiana} = \sqrt{(x_2 - x_1)^2 + (y_2 - y_1)^2} \)`$
+    - Fórmula: $`\text{Distancia Euclidiana} = \sqrt{(x_2 - x_1)^2 + (y_2 - y_1)^2}`$
     - Esta métrica proporciona una medida de cuán lejos están los centros de los patrones recuperados de los centros de los patrones de referencia.
 
 2. **Distancia en X y en Y**:
     - Calcula la distancia en los ejes X e Y entre los centros de los patrones.
     - Fórmulas:
-        - $`\( \text{Distancia en X} = x_2 - x_1 \)`$
-        - $`\( \text{Distancia en Y} = y_2 - y_1 \)`$
+        - $` \text{Distancia en X} = x_2 - x_1`$
+        - $` \text{Distancia en Y} = y_2 - y_1`$
     - Estas métricas proporcionan una medida más específica de cuánto se deben desplazar los centros de los patrones recuperados en cada eje para coincidir con los centros de los patrones de referencia.
 
 ### Ejemplo de Ejecución
@@ -59,6 +59,3 @@ Test 4: Centro recuperado: (4.5, 2.5), Centro de referencia: (4.5, 4.5), Distanc
 ### Resumen
 
 Este repositorio proporciona una implementación completa del modelo de Hopfield para la identificación de imágenes, incluyendo el cálculo de distancias para evaluar la precisión del modelo. La utilización de distancias euclidianas y en los ejes X e Y permite una evaluación detallada de los resultados.
-
-
-$E = mc^2$
